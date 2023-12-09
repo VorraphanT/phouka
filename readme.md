@@ -250,7 +250,7 @@ For including Phouka in another software, which will be distributed under other 
 being open source or proprietary, I may or may not be happy depending on a concrete situation, so please
 contact me to clarify.
 
-#Simulating network outage
+# Simulating network outage
 1) By changing disruptionModel createSimulationConfig function(Demo1 file) from DisruptionModelConfig.VanillaBlockchain (No network outage) to DisruptionModelConfig.ExplicitDisruptionsSchedule(Seq(DisruptionEventDesc.NetworkOutage(BlockchainNodeRef(0),SimTimepoint(900000000),TimeDelta.minutes(5))))
   1. first parameter - the node that is going to be off
   2. second parameter - starting time that the node is going to be off (in microseconnd)
@@ -263,7 +263,7 @@ This method only work with 1 node at a time.
   2. second parameter - the node that is going to be off
   3. third paremeter - how long does the network outage is going to last 
 
-#Writing each node's status to excel files
+# Writing each node's status to excel files
 Each node' status is going to be ready after the simulation has finished so this function must be called after the table have been initialized. So I added the function after events_Table.initDefinition()
   events_Table.exportToExcel( path to your excel file)
 the exportToExcel Function is used to write each files into the specific excel file this function is inside SmartTable Class.
