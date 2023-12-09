@@ -73,6 +73,26 @@ class PhoukaEngine(
     desQueue.addEngineEvent(context.time(), Some(nodeId), EventPayload.NewAgentSpawned(i, progenitor = None))
     newValidator.startup()
   }
+  
+
+  //adding external event to the desQueue
+  desQueue.addExternalEvent(SimTimepoint(900000000), BlockchainNodeRef(0), EventPayload.NetworkDisruptionBegin(TimeDelta.minutes(5)));
+  desQueue.addExternalEvent(SimTimepoint(900000000), BlockchainNodeRef(1), EventPayload.NetworkDisruptionBegin(TimeDelta.minutes(5)));
+  desQueue.addExternalEvent(SimTimepoint(900000000), BlockchainNodeRef(2), EventPayload.NetworkDisruptionBegin(TimeDelta.minutes(5)));
+  desQueue.addExternalEvent(SimTimepoint(900000000), BlockchainNodeRef(3), EventPayload.NetworkDisruptionBegin(TimeDelta.minutes(5)));
+  desQueue.addExternalEvent(SimTimepoint(900000000), BlockchainNodeRef(4), EventPayload.NetworkDisruptionBegin(TimeDelta.minutes(5)));
+  // desQueue.addExternalEvent(SimTimepoint(900000000), BlockchainNodeRef(5), EventPayload.NetworkDisruptionBegin(TimeDelta.minutes(5)));
+  // desQueue.addExternalEvent(SimTimepoint(900000000), BlockchainNodeRef(6), EventPayload.NetworkDisruptionBegin(TimeDelta.minutes(5)));
+  // desQueue.addExternalEvent(SimTimepoint(900000000), BlockchainNodeRef(7), EventPayload.NetworkDisruptionBegin(TimeDelta.minutes(5)));
+  // desQueue.addExternalEvent(SimTimepoint(900000000), BlockchainNodeRef(8), EventPayload.NetworkDisruptionBegin(TimeDelta.minutes(5)));
+  // desQueue.addExternalEvent(SimTimepoint(900000000), BlockchainNodeRef(9), EventPayload.NetworkDisruptionBegin(TimeDelta.minutes(5)));
+
+
+
+
+
+
+
 
   log.info(s"init completed")
 
@@ -98,7 +118,7 @@ class PhoukaEngine(
         return None
 
       var event: Option[Event[BlockchainNodeRef, EventPayload]] = None
-      do {
+      do{
         if (! desQueue.hasNext)
           return None
         event = processNextEventFromQueue()
@@ -196,8 +216,10 @@ class PhoukaEngine(
     payload match {
       case EventPayload.Bifurcation(numberOfClones) =>
         //to avoid additional complexity we just ignore a bifurcation event when it happens during network outage
-        if (box.status == NodeStatus.NETWORK_OUTAGE)
+        if (box.status == NodeStatus.NETWORK_OUTAGE){
           EventMaskingDecision.Mask
+        }
+          
         else {
           for (i <- 1 to numberOfClones) {
             lastNodeIdAllocated += 1
@@ -237,12 +259,16 @@ class PhoukaEngine(
         EventMaskingDecision.Emit
 
       case EventPayload.NetworkDisruptionBegin(period) =>
-        val maskingDecision = if (box.status == NodeStatus.NORMAL)
+        val maskingDecision = if (box.status == NodeStatus.NORMAL){
+          println("node "+box.nodeId +"'s' network status is going to be outage")
           EventMaskingDecision.Transform(_ => Event.Semantic(eventId, timepoint, box.nodeId, EventPayload.NetworkConnectionLost))
+        }
+          
         else
           EventMaskingDecision.Mask
         box.increaseOutageLevel()
         desQueue.addEngineEvent(timepoint + period, Some(box.nodeId), EventPayload.NetworkDisruptionEnd(eventId))
+        println("ending for " +box.nodeId+ " added to queue")
         box.downloadProgressGaugeHolder match {
           case None => //ignore
           case Some(gauge) => gauge.updateCountersAssumingContinuousTransferSinceLastCheckpoint()
@@ -261,6 +287,7 @@ class PhoukaEngine(
         val consumptionDelay: TimeDelta = box.context.time() timePassedSince timepoint
         desQueue.addOutputEvent(box.context.time(), box.nodeId, EventPayload.WakeUpHandlerBegin(eventId, consumptionDelay, strategySpecificMarker))
         if (consumptionDelay > consumptionDelayHardLimit)
+          // println(box.nodeId)
           desQueue.addEngineEvent(box.context.time(), Some(agent), EventPayload.Halt("Consumption delay hard limit exceeded"))
         val timeAtBegin = box.context.time()
         box executeAndRecordProcessingTimeConsumption {
@@ -328,6 +355,7 @@ class PhoukaEngine(
 
       case EventPayload.NetworkDisruptionEnd(disruptionEventId) =>
         box.decreaseOutageLevel()
+        println("node" + box.nodeId +"'s' network is back to normal")
         if (box.status == NodeStatus.NORMAL) {
           for (brick <- box.broadcastBuffer)
             executeBlockchainProtocolMsgBroadcast(box.nodeId, timepoint, brick)

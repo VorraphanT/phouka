@@ -7,9 +7,9 @@ import com.selfdualbrain.gui_framework.layout_dsl.GuiLayoutConfig
 import com.selfdualbrain.gui_framework.layout_dsl.components.SmartTable.ColumnDefinition
 import com.selfdualbrain.gui_framework.layout_dsl.components.{PlainPanel, SmartTable}
 import com.selfdualbrain.gui_framework.{MvpView, Presenter, TextAlignment}
+import java.awt.{BorderLayout, Color, Dimension}
 import com.selfdualbrain.simulator_engine.core.NodeStatus
 
-import java.awt.{BorderLayout, Color, Dimension}
 
 /**
   * Shows per-node statistics. This as stats calculated for the "current state" of the simulation, i.e. after the last step.
@@ -38,12 +38,13 @@ object NodeStatsPresenter {
 
 class NodeStatsView(val guiLayoutConfig: GuiLayoutConfig) extends PlainPanel(guiLayoutConfig) with MvpView[SimulationDisplayModel, NodeStatsPresenter] {
   private val events_Table = new SmartTable(guiLayoutConfig)
+
   this.setPreferredSize(new Dimension(1860,600))
   this.add(events_Table, BorderLayout.CENTER)
   this.surroundWithTitledBorder("Per-validator simulation statistics")
-
   override def afterModelConnected(): Unit = {
-    events_Table.initDefinition(new TableDef(this.model))
+    events_Table.initDefinition(new TableDef(this.model)) 
+    events_Table.exportToExcel( "D:/University/Year2/Indiv BlockChain/phouka-master/stats.xlsx")
   }
 
   class TableDef(simulationDisplayModel: SimulationDisplayModel) extends SmartTable.Model {
@@ -491,7 +492,7 @@ class NodeStatsView(val guiLayoutConfig: GuiLayoutConfig) extends PlainPanel(gui
         preferredWidth = 50,
         maxWidth = 60
       )
-
+    
     )
     override def onRowSelected(rowIndex: Int): Unit = {
       //do nothing

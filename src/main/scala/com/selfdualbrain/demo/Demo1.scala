@@ -10,9 +10,15 @@ import com.selfdualbrain.simulator_engine._
 import com.selfdualbrain.simulator_engine.config._
 import com.selfdualbrain.stats.{BlockchainSimulationStats, StatsPrinter}
 import com.selfdualbrain.textout.TextOutput
+import com.selfdualbrain.gui.NodeStatsView
+import com.selfdualbrain.gui.NodeStatsPresenter
 import com.selfdualbrain.time.{TimeDelta, TimeUnit}
 import com.selfdualbrain.util.LineUnreachable
 import org.slf4j.LoggerFactory
+import com.selfdualbrain.time.SimTimepoint
+import com.selfdualbrain.blockchain_structure.BlockchainNodeRef
+
+
 
 import javax.swing.UIManager
 import scala.util.Random
@@ -110,7 +116,7 @@ object Demo1 {
     log.info(s"simulation completed ($t1 millis), last step was: ${engine.lastStepEmitted}")
 
     //print final statistics to System.out
-    printStatsToConsole()
+    // printStatsToConsole()
 
     //display events log analyzer
     val eventsLogAnalyzer = new EventsLogAnalyzerPresenter
@@ -121,7 +127,8 @@ object Demo1 {
     val statsPresenter = new CombinedSimulationStatsPresenter
     statsPresenter.model = simulationDisplayModel
     sessionManager.mountTopPresenter(statsPresenter, Some("Simulation statistics"))
-  }
+
+  } 
 
   private val exampleNcbConfig: ProposeStrategyConfig = ProposeStrategyConfig.NaiveCasper(
     brickProposeDelays = LongSequence.Config.PoissonProcess(lambda = 4, lambdaUnit = TimeUnit.MINUTES, outputUnit = TimeUnit.MICROSECONDS),
@@ -159,13 +166,14 @@ object Demo1 {
       downloadBandwidthModel = DownloadBandwidthConfig.Generic(LongSequence.Config.Uniform(min = NetworkSpeed.megabitsPerSecond(2), max = NetworkSpeed.megabitsPerSecond(20))),
       nodesComputingPowerModel = LongSequence.Config.Pareto(minValue = 200000, alpha = 1.2),
       nodesComputingPowerBaseline = 200000,
-      consumptionDelayHardLimit = TimeDelta.seconds(60),
-      numberOfValidators = 25,
+      consumptionDelayHardLimit = TimeDelta.minutes(1),
+      numberOfValidators = 25, //100,
       validatorsWeights = IntSequence.Config.ParetoWithCap(minValue = 100, maxValue = 1000, alpha = 1.5),
       finalizer = FinalizerConfig.SummitsTheoryV2(ackLevel = 3, relativeFTT = 0.30),
       forkChoiceStrategy = ForkChoiceStrategy.IteratedBGameStartingAtLastFinalized,
       bricksProposeStrategy,
       disruptionModel = DisruptionModelConfig.VanillaBlockchain,
+      // disruptionModel = DisruptionModelConfig.ExplicitDisruptionsSchedule(Seq(DisruptionEventDesc.NetworkOutage( BlockchainNodeRef(0),SimTimepoint(900000000),TimeDelta.minutes(5)))),
       transactionsStreamModel = TransactionsStreamConfig.IndependentSizeAndExecutionCost(
         sizeDistribution = IntSequence.Config.Exponential(mean = 1000), //in bytes
         costDistribution = LongSequence.Config.Exponential(mean = 500) //in gas
@@ -183,12 +191,14 @@ object Demo1 {
       observers = Seq(
         ObserverConfig.DefaultStatsProcessor(latencyMovingWindow = 10, throughputMovingWindow = 300, throughputCheckpointsDelta = 10)
       )
-    )
-
+      )
+    
   def printStatsToConsole(): Unit = {
     val statsPrinter = new StatsPrinter(TextOutput.overConsole(4, '.'))
     println("========================== STATISTICS ==========================")
-    statsPrinter.print(simulationSetup.guiCompatibleStats.get)
+    // statsPrinter.print(simulationSetup.guiCompatibleStats.get)
+    statsPrinter.exportTotalBlock(simulationSetup.guiCompatibleStats.get)
+    
   }
 
   def measureExecutionTime(block: => Unit): Long = {

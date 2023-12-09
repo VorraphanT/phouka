@@ -10,6 +10,9 @@ import java.awt.{BorderLayout, Color, Component, EventQueue}
 import javax.swing._
 import javax.swing.event.ListSelectionEvent
 import javax.swing.table.{AbstractTableModel, DefaultTableCellRenderer}
+import org.apache.poi.ss.usermodel.{CellStyle, DataFormat, WorkbookFactory}
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import java.io.{File, FileInputStream, FileOutputStream}
 
 /**
   * An attempt to craft a simple-to-use variant of JTable.
@@ -70,6 +73,7 @@ class SmartTable(guiLayoutConfig: GuiLayoutConfig) extends PlainPanel(guiLayoutC
       }
     })
     scrollPane.setViewportView(swingTable)
+
   }
 
   /**
@@ -89,6 +93,41 @@ class SmartTable(guiLayoutConfig: GuiLayoutConfig) extends PlainPanel(guiLayoutC
 
     }
   }
+  def exportToExcel(filePath: String): Unit = {
+      println("writing in excel")
+      val file = new File(filePath)
+      val workbook = new XSSFWorkbook(new FileInputStream(file))
+      val sheet = workbook.getSheet("5 node network out #3")
+      // val sheet = workbook.createSheet("1 node network out #1")
+      val headerRow = sheet.createRow(0)
+      tableDefinition.columns.indices.foreach { i =>
+        val cell = headerRow.createCell(i)
+        cell.setCellValue(tableDefinition.columns(i).name)
+      }
+      (0 until 25).foreach { rowIndex =>
+        val row = sheet.createRow(rowIndex + 1)
+        tableDefinition.columns.indices.foreach { colIndex =>
+          val cell = row.createCell(colIndex)
+          val cellValue = tableDefinition.columns(colIndex).cellValueFunction(rowIndex)
+          val cellConverted = try{
+            cellValue.toString().toFloat
+          }
+          catch{
+            case e: NumberFormatException =>
+             0.0f
+          }
+          cell.setCellValue(cellConverted)
+        }
+      }
+      tableDefinition.columns.indices.foreach(sheet.autoSizeColumn)
+      val fileOut = new FileOutputStream(filePath)
+      workbook.write(fileOut)
+      fileOut.flush()
+      fileOut.close()
+      workbook.close()
+      println("workbook closed")
+    }
+  
 
 }
 
@@ -114,6 +153,9 @@ object SmartTable {
     val columnsScalingMode: ColumnsScalingMode
 
     def calculateNumberOfRows: Int
+
+    //added
+    // def exportToExcel(filePath: String): Unit
   }
 
   sealed abstract class DataEvent
@@ -166,7 +208,7 @@ object SmartTable {
       else
         convertClassToJavaStandards(nominalClass)
     }
-
+    
     private val scala2javaClassConversionTable: Map[Class[_], Class[_]] = Map(
       classOf[Boolean] -> classOf[java.lang.Boolean],
       classOf[Byte] -> classOf[java.lang.Byte],

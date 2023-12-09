@@ -123,7 +123,7 @@ object PresentersSandbox {
       genesis,
       expectedNumberOfBricks = 10000,
       expectedNumberOfEvents = 100000,
-      maxNumberOfAgents = 100,
+      maxNumberOfAgents = 25,
       lfbChainMaxLengthEstimation = 1000
     )
 

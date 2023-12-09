@@ -3,6 +3,10 @@ package com.selfdualbrain.stats
 import com.selfdualbrain.blockchain_structure.BlockchainNodeRef
 import com.selfdualbrain.textout.AbstractTextOutput
 import com.selfdualbrain.time.{HumanReadableTimeAmount, SimTimepoint, TimeDelta}
+import org.apache.poi.ss.usermodel.{CellStyle, DataFormat, WorkbookFactory}
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import java.io.{File, FileInputStream, FileOutputStream}
+
 
 class StatsPrinter(out: AbstractTextOutput) {
 
@@ -133,5 +137,28 @@ class StatsPrinter(out: AbstractTextOutput) {
     }
 
   }
+  def exportTotalBlock(stats: BlockchainSimulationStats): Unit = {
+      println("writing in excel")
+      val file = new File("D:/University/Year2/Indiv BlockChain/phouka-master/block_stats.xlsx")
+      val workbook = new XSSFWorkbook(new FileInputStream(file))
+      val sheet = workbook.createSheet("1 node network out #1")
+      val headerRow = sheet.createRow(0)
+      val cell0 = headerRow.createCell(0)
+      cell0.setCellValue("Total Blocks")
+      val cell1 = headerRow.createCell(1)
+      cell1.setCellValue("Total Finalized Blocks")
+      val infoRow = sheet.createRow(1)
+      val totalBlock = infoRow.createCell(0)
+      val totalFinalized = infoRow.createCell(1)
+      totalBlock.setCellValue(stats.numberOfBlocksPublished)
+      totalFinalized.setCellValue(stats.numberOfCompletelyFinalizedBlocks)
+      val fileOut = new FileOutputStream("D:/University/Year2/Indiv BlockChain/phouka-master/block_stats.xlsx")
+      workbook.write(fileOut)
+      fileOut.flush()
+      fileOut.close()
+      workbook.close()
+      println("workbook closed")
+    }
+  
 
 }

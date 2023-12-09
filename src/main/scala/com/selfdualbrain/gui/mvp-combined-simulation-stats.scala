@@ -43,6 +43,7 @@ class CombinedSimulationStatsView(val guiLayoutConfig: GuiLayoutConfig)
     val generalStatsView = presenter.generalStatsPresenter.createAndConnectDefaultView()
     val chartsView = presenter.chartsPresenter.createAndConnectDefaultView()
     val nodeStatsView = presenter.perNodeStatsPresenter.createAndConnectDefaultView()
+    
 
     val upperPane = new StaticSplitPanel(guiLayoutConfig, locationOfSatellite = PanelEdge.WEST)
     val generalStatsWrappedInScrollPane = generalStatsView.wrappedInScroll(horizontalScrollPolicy = "never", verticalScrollPolicy = "always")
@@ -55,5 +56,4 @@ class CombinedSimulationStatsView(val guiLayoutConfig: GuiLayoutConfig)
   override def afterModelConnected(): Unit = {
     //do nothing
   }
-
 }

@@ -172,7 +172,7 @@ object LegacyExperimentConfig {
     32 + //prev msg
     32 + //target block
     32   //signature
-
+  
   val default: LegacyExperimentConfig = LegacyExperimentConfig(
     randomSeed = Some(new Random(42).nextLong()),
     networkModel = NetworkConfig.HomogenousNetworkWithRandomDelays(delaysGenerator = LongSequence.Config.PseudoGaussian(100000, 20000000)),
@@ -189,6 +189,7 @@ object LegacyExperimentConfig {
       blocksFractionAsPercentage = 10 //blocks fraction as if in perfect round-robin (in every round there is one leader producing a block and others produce one ballot each)
     ),
     disruptionModel = DisruptionModelConfig.VanillaBlockchain,
+
     transactionsStreamModel = TransactionsStreamConfig.IndependentSizeAndExecutionCost(
       sizeDistribution = IntSequence.Config.Pareto(100, 2500),//in bytes
       costDistribution = LongSequence.Config.Pareto(1, 1000)   //in gas
